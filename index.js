@@ -18,6 +18,10 @@ const {
 } = require("../dashboard/src/data/data");
 
 
+const holdingsRouter = require('./routes/holdings');
+const positionsRouter = require('./routes/positions');
+
+
 const PORT = process.env.PORT || 8080;
 const url = process.env.MONGO_URL;
 
@@ -84,15 +88,27 @@ main()
 // });
 
 
-app.get('/allHoldings', async (req, res) => {
-   let allHoldings = await HoldingsModel.find({});
-   res.send(allHoldings);
+app.get("/", (req, res, next) => {
+  res.send("You are on root Path!!");
+  console.log("welcome to root path");
 });
 
-app.get('/allPositions', async (req, res) => {
-  let allPositions = await PositionsModel.find({});
-  res.send(allPositions);
-});
+
+// app.get('/allHoldings', async (req, res) => {
+//    let allHoldings = await HoldingsModel.find({});
+//    res.send(allHoldings);
+// });
+
+app.use("/holdings", holdingsRouter);
+
+
+
+// app.get('/allPositions', async (req, res) => {
+//   let allPositions = await PositionsModel.find({});
+//   res.send(allPositions);
+// });
+
+app.use("/positions", positionsRouter);
 
 
 // adding new Order 
@@ -121,7 +137,4 @@ app.listen(PORT, () => {
 });
 
 
-app.get("/", (req, res, next) => {
-  res.send("You are on root Path!!");
-  console.log("welcome to root path");
-});
+
