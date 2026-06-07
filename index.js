@@ -5,6 +5,7 @@ const app = express();
 const mongoose = require("mongoose");
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 
 
@@ -20,14 +21,19 @@ const {
 
 const holdingsRouter = require('./routes/holdings');
 const positionsRouter = require('./routes/positions');
+const userRouter = require('./routes/users');
 
 
 const PORT = process.env.PORT || 8080;
 const url = process.env.MONGO_URL;
 
 // parsing data and security
-app.use(cors());
+// app.use(cors());
+
+app.use(cors({ origin: true, credentials: true }));
 app.use(bodyParser.json());
+app.use(express.json());
+app.use(cookieParser());
 
 
 
@@ -94,21 +100,13 @@ app.get("/", (req, res, next) => {
 });
 
 
-// app.get('/allHoldings', async (req, res) => {
-//    let allHoldings = await HoldingsModel.find({});
-//    res.send(allHoldings);
-// });
-
 app.use("/holdings", holdingsRouter);
-
-
-
-// app.get('/allPositions', async (req, res) => {
-//   let allPositions = await PositionsModel.find({});
-//   res.send(allPositions);
-// });
-
 app.use("/positions", positionsRouter);
+
+// Authenticatin (login, logout, signup)
+app.use("/", userRouter);
+
+
 
 
 // adding new Order 
@@ -127,10 +125,9 @@ app.post('/newOrder', async (req, res) => {
       .catch((err) => {
         console.log(err.message);
       })
-      // console.log("new order added!!");
-
       //  res.send("Order saved");
 });
+
 
 app.listen(PORT, () => {
   console.log(`app is started on port ${PORT} ....`);
