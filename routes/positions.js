@@ -1,16 +1,14 @@
 const express = require("express");
 const router = express.Router();
 
-const PositionsModel = require("../models/positionsModel");
+const Position = require("../models/positionsModel");
 
 router
   .route("/")
-
-  .get(async (req, res) => {
-    let allPositions = await PositionsModel.find({});
-    res.send(allPositions);
-  });
-
+     .get(async (req, res) => {
+       let allPositions = await Position.find({});
+       res.send(allPositions);
+      });
 
   
 

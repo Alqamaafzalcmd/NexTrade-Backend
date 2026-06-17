@@ -10,18 +10,20 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const flash = require("connect-flash");
 
-const { HoldingsModel } = require("./models/holdingsModel");
-const { PositionsModel } = require("./models/positionsModel");
-const { OrdersModel } = require("./models/ordersModel");
+const Holding = require("./models/holdingsModel");
+const Position = require("./models/positionsModel");
+const Order = require("./models/ordersModel");
 const {
   holdings,
   positions,
   watchlist,
 } = require("../dashboard/src/data/data");
 
+
 const holdingsRouter = require("./routes/holdings");
 const positionsRouter = require("./routes/positions");
 const userRouter = require("./routes/users");
+const orderRouter = require("./routes/orders");
 
 // custom error handling
 const ExpressError = require("./utils/ExpressError");
@@ -70,8 +72,8 @@ main()
 // app.get("/addPostions", async (req, res) => {
 // //   console.log(positions);
 //   try {
-//     positions.forEach((item) => {
-//       let newPositions = new PositionsModel({
+//     Position.forEach((item) => {
+//       let newPositions = new Position({
 //         product: item.product,
 //         name: item.name,
 //         qty: item.qty,
@@ -94,7 +96,7 @@ main()
 
 // app.get("/addHoldings", async (req, res) => {
 //   try {
-//     await HoldingsModel.insertMany(holdings);
+//     await Holding.insertMany(holdings);
 //     res.send("Data inserted successfully");
 //   } catch (err) {
 //     console.error("Failed to insert holdings:", err.message);
@@ -129,13 +131,15 @@ app.get("/set-flash", (req, res, next) => {
 
 app.use("/holdings", holdingsRouter);
 app.use("/positions", positionsRouter);
+app.use("/orders", orderRouter);
 
 // Authenticatin (login, logout, signup)
 app.use("/", userRouter);
 
 // adding new Order
 app.post("/newOrder", async (req, res) => {
-  let newOrder = new OrdersModel({
+
+  let newOrder = new Order({
     name: req.body.name,
     qty: req.body.qty,
     price: req.body.price,
@@ -160,6 +164,6 @@ app.listen(PORT, () => {
 app.use((err, req, res, next) => {
   let { statusCode = 500, message } = err;
   //  console.log(err);
-  console.log("error occured .......");
+  console.log(err.message);
   res.status(statusCode).send(message);
 });
