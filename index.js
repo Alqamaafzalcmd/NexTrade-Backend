@@ -12,6 +12,7 @@ const flash = require("connect-flash");
 
 const Holding = require("./models/holdingsModel");
 const Position = require("./models/positionsModel");
+const Stock = require("./models/stockModel");
 const Order = require("./models/ordersModel");
 const {
   holdings,
@@ -19,14 +20,18 @@ const {
   watchlist,
 } = require("../dashboard/src/data/data");
 
-
 const holdingsRouter = require("./routes/holdings");
 const positionsRouter = require("./routes/positions");
-const userRouter = require("./routes/users");
+const authRouter = require("./routes/auth");
 const orderRouter = require("./routes/orders");
+const watchlistRouter = require("./routes/watchlist");
+const userRouter = require("./routes/users")
 
 // custom error handling
 const ExpressError = require("./utils/ExpressError");
+
+// symbols of stock
+const symbols = require("./symbols");
 
 const PORT = process.env.PORT || 8080;
 const url = process.env.MONGO_URL;
@@ -129,16 +134,58 @@ app.get("/set-flash", (req, res, next) => {
   });
 });
 
+
+
+let updateStockPrices = async () => {
+  try {
+    for (const { symbol, companyName } of symbols) {
+      const response = await fetch(
+        `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${process.env.FINNHUB_KEY}`,
+      );
+
+      const stock = await response.json();
+
+        await Stock.findOneAndUpdate(
+          { symbol },
+          { 
+            name:companyName,
+            symbol,
+            currentPrice: stock.c,
+            previousClose: stock.pc,
+            change: stock.d,
+            high: stock.h,
+            low: stock.l,
+            open: stock.o,
+            changePercent: stock.dp,
+            updatedAt: new Date(),
+          },
+          {
+            upsert: true,
+            returnDocument: "after",
+          },
+        );
+  
+    }
+    console.log(`updated data at ${new Date().toLocaleTimeString()}`);
+    
+  } catch (err) {
+    console.log(err);
+  }
+};
+setInterval(updateStockPrices, 100000);
+
+
 app.use("/holdings", holdingsRouter);
 app.use("/positions", positionsRouter);
 app.use("/orders", orderRouter);
+app.use("/watchlist", watchlistRouter);
+app.use("/users", userRouter);
 
-// Authenticatin (login, logout, signup)
-app.use("/", userRouter);
+// Authentication (login, logout, signup)
+app.use("/auth", authRouter);
 
 // adding new Order
 app.post("/newOrder", async (req, res) => {
-
   let newOrder = new Order({
     name: req.body.name,
     qty: req.body.qty,
@@ -164,6 +211,6 @@ app.listen(PORT, () => {
 app.use((err, req, res, next) => {
   let { statusCode = 500, message } = err;
   //  console.log(err);
-  console.log(err.message);
+  console.log(err);
   res.status(statusCode).send(message);
 });

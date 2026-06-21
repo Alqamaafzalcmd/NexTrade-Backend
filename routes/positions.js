@@ -1,15 +1,93 @@
 const express = require("express");
 const router = express.Router();
-
+const {addOrders} = require('../middlewares/addOrders');
 const Position = require("../models/positionsModel");
+const Stock = require("../models/stockModel");
+const User = require("../models/usersModel");
+const { userVerification } = require("../middlewares/authorization");
+
 
 router
   .route("/")
-     .get(async (req, res) => {
-       let allPositions = await Position.find({});
-       res.send(allPositions);
+     .get(userVerification, async (req, res) => {
+              // console.log(req)
+              const allPositions = await Position.find({customer:req.user._id});
+              // res.send(allPositions);
+
+              const name = allPositions.map((s) => {return s.name});
+      
+              const stocks = await Stock.find({
+                name: { $in: name },
+              });
+
+              // res.send(stocks);
+               
+      
+              // mapping symbol with full stock details
+              const stockMap = {};
+              stocks.forEach((stock) => {
+                stockMap[stock.name] = stock;
+              });
+      
+      
+              const result = allPositions.map((positions) => {
+                const stock = stockMap[positions.name];
+                // console.log(stock);
+      
+                return {
+                  product:"MIS",
+                  instrument: positions.name,
+                  qty: positions.qty,
+                  avgCost: positions.avg,
+                  ltp: stock.currentPrice,
+                  currentValue: stock.currentPrice * positions.qty,
+                  pnl: (stock.currentPrice - positions.avg) * positions.qty,
+                  netChange: stock.changePercent,
+                  dayChange:
+                    (stock.currentPrice - stock.previousClose) * positions.qty,
+                };
+              });
+      
+              res.send(result);
       });
 
   
+router.route("/add")
+ .post(userVerification, addOrders, async (req, res) => {
+  console.log("in positions ....");
+
+  let stock = await Position.findOne({name:req.body.name});
+
+  // updating funds and used margin
+  let user = await User.findOne({ _id: req.user._id });
+  const totalCost = Number(req.body.price);
+  user.funds -= totalCost;
+  user.usedMargin += totalCost;
+  await user.save();
+
+  if(stock){
+    const newQty = req.body.qty + stock.qty;
+    const newAvg = ((req.body.price * req.body.qty) + (stock.price * stock.qty) / newQty);
+    stock.qty = newQty;
+    stock.price = req.body.price;
+    await stock.save();
+  }
+  else{
+    const newPostions = {
+      product:req.body.product,
+      name: req.body.name,
+      qty: req.body.qty,
+      avg:req.body.price
+    };
+    newPostions.customer = req.user._id;
+    await Position.create(newPostions);
+
+  }
+});
+
+
+
+
 
 module.exports = router;
+

@@ -6,6 +6,7 @@ const ordersSchema = new Schema({
   qty: Number,
   price: Number,
   mode: String,
+  status:String,
   customer: {
     type: Schema.Types.ObjectId,
     ref: "User",

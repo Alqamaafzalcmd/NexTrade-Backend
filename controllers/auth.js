@@ -1,10 +1,6 @@
 const User = require("../models/usersModel");
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const createSecretToken = require('../utils/secretToken');
+const createSecretToken = require("../utils/secretToken");
 const bcrypt = require("bcryptjs");
-const { userVerification } = require('../middlewares/authorization');
-const userController = require('../controllers/users')
 
 module.exports.signup = async (req, res) => {
   const { email, password, username } = req.body;
@@ -13,7 +9,6 @@ module.exports.signup = async (req, res) => {
     return res
       .status(400)
       .send({ message: "email, password and username are required" });
-    // throw new ExpressError(400, 'email, password and username are required');
   }
 
   const currUser = await User.findOne({ email });
@@ -23,22 +18,24 @@ module.exports.signup = async (req, res) => {
       message: "User already exists",
     });
   }
-  // username: "alqma123",
-  //   email: "alqama@gmail.com",
-  //   password: "12345###",
+
   const newUser = new User({
-    username:req.body.username,
-    email:req.body.email,
-    password:req.body.password,
-  })
+    username: req.body.username,
+    email: req.body.email,
+    password: req.body.password,
+  });
+
+  
 
   await newUser.save();
+
+  // console.log(await bcrypt.compare("12345###", newUser.password));
 
   const token = createSecretToken(newUser._id);
 
   res.cookie("token", token, {
-    withCredentials: true, // cross origin cookie sharing
-    httpOnly: false, // Not safe: JS can read cookie via document.cookie
+    withCredentials: true,
+    httpOnly: false,
     expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
   });
 
@@ -48,8 +45,6 @@ module.exports.signup = async (req, res) => {
     .send({ message: "User signed in successfully", success: true, newUser });
 };
 
-
-
 module.exports.login = async (req, res) => {
   try {
     const {
@@ -57,17 +52,19 @@ module.exports.login = async (req, res) => {
       username_email: email,
       password,
     } = req.body;
+    
 
     if ((!email || !username) && !password) {
       return res
         .status(400)
         .json({ message: "username/email and password are required" });
     }
+    // console.log(req.body);
 
     const user =
-      (await User.findOne({ email })) ||
+      (await User.findOne({  email })) ||
       (await User.findOne({ username }));
-
+    // console.log(user);
     if (!user) {
       return res
         .status(401)
@@ -75,14 +72,18 @@ module.exports.login = async (req, res) => {
     }
 
     const valid = await bcrypt.compare(password, user.password);
+    // console.log(password);
+    // console.log(user.password);
+    // console.log(valid);
     if (!valid) {
+      // console.log("validation failed....")
       return res
         .status(401)
         .json({ message: "incorrect username/email or password" });
     }
 
-    // Generate new token and set cookie
     const token = await createSecretToken(user._id);
+    // console.log(token);
     res.cookie("token", token, {
       withCredentials: true,
       httpOnly: false,
@@ -94,6 +95,7 @@ module.exports.login = async (req, res) => {
       .status(200)
       .json({ message: "user logged in successfully", success: true, user });
   } catch (err) {
+    console.log(err);
     return res.status(500).send({ message: err.message, success: false, user });
   }
 };

@@ -16,6 +16,14 @@ const userSchema = new Schema({
     type: String,
     required: [true, "Your password is required"],
   },
+  funds: {
+    type: Number,
+    default:0,
+  },
+  usedMargin:{
+    type:Number,
+    default:0,
+  },
   createdAt: {
     type: Date,
     default: new Date(),
