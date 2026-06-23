@@ -3,7 +3,6 @@ const User = require('../models/usersModel');
 const jwt = require('jsonwebtoken');
 
 
-
 module.exports.userVerification = async (req, res, next) => {
     // console.log("in middleware ....")
     const token = req.cookies.token;

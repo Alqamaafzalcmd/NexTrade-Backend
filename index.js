@@ -136,6 +136,23 @@ app.get("/set-flash", (req, res, next) => {
 
 
 
+
+app.get("/getStock", async(req, res) => {
+    let data = [{}];
+    for (const { symbol, companyName } of symbols) {
+      const response = await fetch(
+        `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${process.env.FINNHUB_KEY}`,
+      );
+
+      const stock = await response.json();
+      data.push(stock);
+
+    }
+
+    res.send(data);
+});
+
+
 let updateStockPrices = async () => {
   try {
     for (const { symbol, companyName } of symbols) {
@@ -144,6 +161,7 @@ let updateStockPrices = async () => {
       );
 
       const stock = await response.json();
+      // res.send(stock);
 
         await Stock.findOneAndUpdate(
           { symbol },

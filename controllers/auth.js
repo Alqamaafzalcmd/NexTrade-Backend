@@ -25,18 +25,17 @@ module.exports.signup = async (req, res) => {
     password: req.body.password,
   });
 
-  
-
   await newUser.save();
 
   // console.log(await bcrypt.compare("12345###", newUser.password));
 
   const token = createSecretToken(newUser._id);
+  console.log(token);
 
   res.cookie("token", token, {
     withCredentials: true,
     httpOnly: false,
-    expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
   });
 
   req.flash("success", `Welcome ${newUser.username} to NexTrade`);
@@ -52,19 +51,18 @@ module.exports.login = async (req, res) => {
       username_email: email,
       password,
     } = req.body;
-    
 
     if ((!email || !username) && !password) {
       return res
         .status(400)
         .json({ message: "username/email and password are required" });
     }
-    // console.log(req.body);
+
+    console.log(req.body);
 
     const user =
-      (await User.findOne({  email })) ||
-      (await User.findOne({ username }));
-    // console.log(user);
+      (await User.findOne({ username })) || (await User.findOne({ email }));
+    console.log("current user is:", user);
     if (!user) {
       return res
         .status(401)
@@ -72,22 +70,23 @@ module.exports.login = async (req, res) => {
     }
 
     const valid = await bcrypt.compare(password, user.password);
+
     // console.log(password);
     // console.log(user.password);
-    // console.log(valid);
+    console.log(valid);
     if (!valid) {
-      // console.log("validation failed....")
+      console.log("password validation is failed .......")
       return res
         .status(401)
         .json({ message: "incorrect username/email or password" });
     }
 
-    const token = await createSecretToken(user._id);
-    // console.log(token);
+    const token = await createSecretToken(user.id);
+    console.log(token);
     res.cookie("token", token, {
       withCredentials: true,
       httpOnly: false,
-      expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
 
     req.flash("success", "user logged in successfully");
