@@ -21,6 +21,9 @@ const watchlistRouter = require("./routes/watchlist");
 const userRouter = require("./routes/users");
 const ExpressError = require("./utils/ExpressError");
 
+// storage -----
+const {MongoStore} = require("connect-mongo");
+
 // symbols of stock
 const symbols = require("./symbols");
 
@@ -39,13 +42,34 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(
-  session({
-    secret: "alqama-secret-key",
-    resave: false,
-    saveUninitialized: false,
-  }),
-);
+
+
+const store = MongoStore.create({
+  mongoUrl: url,
+  crypto: {
+    secret: process.env.SECRET,
+  },
+  touchAfter: 24 * 3600, // time period in seconds
+  ttl: 60 * 60 * 24 * 7,
+});
+
+store.on("error", () => {
+  console.log("ERROR IN MONGO SESSION STORE", err);
+});
+
+const sessionOptions = {
+  store, // session storage
+  secret: process.env.SECRET,
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    httpOnly: true, // for security purpose , to prevent from crossscripting attack
+  },
+};
+
+app.use(session(sessionOptions));
 
 app.use(flash());
 
