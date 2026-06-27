@@ -1,13 +1,9 @@
-const Holding = require("../models/holdingsModel");
 const Stock = require("../models/stockModel");
-const Order = require("../models/ordersModel");
 const User = require("../models/usersModel");
 const Position = require("../models/positionsModel");
 
 module.exports.getAll = async (req, res) => {
-  // console.log(req)
   const allPositions = await Position.find({ customer: req.user._id });
-  // res.send(allPositions);
 
   const name = allPositions.map((s) => {
     return s.name;
@@ -17,7 +13,6 @@ module.exports.getAll = async (req, res) => {
     name: { $in: name },
   });
 
-  // res.send(stocks);
 
   // mapping symbol with full stock details
   const stockMap = {};
@@ -27,7 +22,6 @@ module.exports.getAll = async (req, res) => {
 
   const result = allPositions.map((positions) => {
     const stock = stockMap[positions.name];
-    // console.log(stock);
 
     return {
       product: "MIS",
@@ -46,8 +40,6 @@ module.exports.getAll = async (req, res) => {
 };
 
 module.exports.addPosition = async (req, res) => {
-  console.log("in positions ....");
-
   const qty = Number(req.body.qty);
   const price = Number(req.body.price);
   let stock = await Position.findOne({
@@ -89,8 +81,6 @@ module.exports.addPosition = async (req, res) => {
 };
 
 module.exports.sellPosition = async (req, res) => {
-  console.log("selling stock from positions ......");
-
   const qty = Number(req.body.qty);
   const price = Number(req.body.price);
 
@@ -115,11 +105,6 @@ module.exports.sellPosition = async (req, res) => {
   // const pnl = (req.body.price - position.avg) * req.body.qty;
   const sellAmount = price * qty;
   const blockedAmount = qty * position.avg;
-
-  // user.funds += pnl;
-  // user.funds += blockedAmount;
-
-  // OR ---- ---- ----- ---- ----- ----- --- ---
 
   user.funds += sellAmount;
   user.usedMargin -= blockedAmount;

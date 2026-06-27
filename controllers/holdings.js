@@ -1,11 +1,9 @@
 const Holding = require("../models/holdingsModel");
 const Stock = require("../models/stockModel");
-const Order = require("../models/ordersModel");
 const User = require("../models/usersModel");
 
 module.exports.getAll = async (req, res) => {
   const allHoldings = await Holding.find({ customer: req.user.id });
-  // res.send(allHoldings)
   const name = allHoldings.map((s) => {
     return s.name;
   });
@@ -22,7 +20,6 @@ module.exports.getAll = async (req, res) => {
 
   const result = allHoldings.map((holding) => {
     const stock = stockMap[holding.name];
-    // console.log(stock);
 
     return {
       instrument: holding.name,
@@ -40,8 +37,6 @@ module.exports.getAll = async (req, res) => {
 };
 
 module.exports.addHolding = async (req, res) => {
-  console.log("in holdings");
-  console.log(req.body);
   const qty = Number(req.body.qty);
   const price = Number(req.body.price);
   let stock = await Holding.findOne({
@@ -54,10 +49,8 @@ module.exports.addHolding = async (req, res) => {
   if (user.funds < price) {
     return res.status(400).json({ message: "Insufficient funds" });
   }
-  // console.log("funds rejected");
   user.funds -= price;
   await user.save();
-  console.log("saving user");
 
   if (stock) {
     const newQty = qty + stock.qty;
@@ -71,7 +64,6 @@ module.exports.addHolding = async (req, res) => {
       qty,
       avg: price,
     };
-    // console.log(newHolding);
     newHolding.customer = req.user._id;
     await Holding.create(newHolding);
   }
@@ -80,8 +72,6 @@ module.exports.addHolding = async (req, res) => {
 };
 
 module.exports.sellHolding = async (req, res) => {
-  console.log("selling stock from holding ......");
-
   const qty = Number(req.body.qty);
   const price = Number(req.body.price);
   let holding = await Holding.findOne({

@@ -2,7 +2,6 @@ const User = require("../models/usersModel");
 const createSecretToken = require("../utils/secretToken");
 const bcrypt = require("bcryptjs");
 
-
 module.exports.signup = async (req, res) => {
   const { email, password, username } = req.body;
 
@@ -28,10 +27,7 @@ module.exports.signup = async (req, res) => {
 
   await newUser.save();
 
-  // console.log(await bcrypt.compare("12345###", newUser.password));
-
   const token = createSecretToken(newUser._id);
-  console.log(token);
 
   res.cookie("token", token, {
     withCredentials: true,
@@ -53,18 +49,14 @@ module.exports.login = async (req, res) => {
       password,
     } = req.body;
 
-    // console.log(req.cookies)
     if ((!email || !username) && !password) {
       return res
         .status(400)
         .json({ message: "username/email and password are required" });
     }
 
-    // console.log(req.body);
-
     const user =
       (await User.findOne({ username })) || (await User.findOne({ email }));
-    console.log("current user is:", user);
     if (!user) {
       return res
         .status(401)
@@ -73,18 +65,13 @@ module.exports.login = async (req, res) => {
 
     const valid = await bcrypt.compare(password, user.password);
 
-    // console.log(password);
-    // console.log(user.password);
-    console.log(valid);
     if (!valid) {
-      console.log("password validation is failed .......");
       return res
         .status(401)
         .json({ message: "incorrect username/email or password" });
     }
 
     const token = await createSecretToken(user.id);
-    console.log(token);
     res.cookie("token", token, {
       withCredentials: true,
       httpOnly: false,
@@ -96,7 +83,6 @@ module.exports.login = async (req, res) => {
       .status(200)
       .json({ message: "user logged in successfully", success: true, user });
   } catch (err) {
-    console.log(err);
     return res.status(500).send({ message: err.message, success: false, user });
   }
 };

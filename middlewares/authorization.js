@@ -4,12 +4,10 @@ const jwt = require('jsonwebtoken');
 
 
 module.exports.userVerification = async (req, res, next) => {
-    // console.log("in middleware ....")
     const token = req.cookies.token;
 
 
     if (!token) {
-        // console.log("no token found");
         return res.status(401).json({ status: false, message: "No token" });
     }
 
@@ -23,11 +21,9 @@ module.exports.userVerification = async (req, res, next) => {
         }
 
         req.user = user; // store user for next middleware/route
-        // console.log("at the end of middleware");
         next();
 
     } catch (err) {
-        // console.log(err);
         return res.status(401).json({ status: false });
     }
 };

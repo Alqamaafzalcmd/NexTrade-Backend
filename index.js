@@ -10,35 +10,24 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const flash = require("connect-flash");
 
-const Holding = require("./models/holdingsModel");
-const Position = require("./models/positionsModel");
 const Stock = require("./models/stockModel");
 const Order = require("./models/ordersModel");
-const {
-  holdings,
-  positions,
-  watchlist,
-} = require("../dashboard/src/data/data");
 
 const holdingsRouter = require("./routes/holdings");
 const positionsRouter = require("./routes/positions");
 const authRouter = require("./routes/auth");
 const orderRouter = require("./routes/orders");
 const watchlistRouter = require("./routes/watchlist");
-const userRouter = require("./routes/users")
-
-// custom error handling
+const userRouter = require("./routes/users");
 const ExpressError = require("./utils/ExpressError");
 
 // symbols of stock
 const symbols = require("./symbols");
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT;
 const url = process.env.MONGO_URL;
 
 // parsing data and security
-// app.use(cors());
-
 app.use(
   cors({
     origin: ["http://localhost:5173", "http://localhost:5174"],
@@ -66,52 +55,15 @@ async function main() {
 
 main()
   .then(() => {
-    console.log("connected to database succesfully....");
+    console.log("database connection successful....");
   })
   .catch((err) => {
     console.log("database connection failed !!!");
-    console.log(err.message);
+    process.exit(1);
   });
-
-// inserting temp data ::::::::::::::::::::
-// app.get("/addPostions", async (req, res) => {
-// //   console.log(positions);
-//   try {
-//     Position.forEach((item) => {
-//       let newPositions = new Position({
-//         product: item.product,
-//         name: item.name,
-//         qty: item.qty,
-//         avg: item.avg,
-//         price: item.price,
-//         net: item.net,
-//         day: item.day,
-//         isLoss: item.isLoss,
-//       });
-
-//       newPositions.save();
-//     });
-
-//   } catch (err) {
-//     console.log(err.message);
-//   }
-
-//   res.send("data inserted!");
-// });
-
-// app.get("/addHoldings", async (req, res) => {
-//   try {
-//     await Holding.insertMany(holdings);
-//     res.send("Data inserted successfully");
-//   } catch (err) {
-//     console.error("Failed to insert holdings:", err.message);
-//     res.status(500).send("Failed to insert holdings");
-//   }
-// });
 
 app.get("/", (req, res, next) => {
   res.send("You are on root Path!!");
-  console.log("welcome to root path");
 });
 
 app.get("/flash-message", (req, res) => {
@@ -127,29 +79,10 @@ app.get("/flash-message", (req, res) => {
 app.get("/set-flash", (req, res, next) => {
   req.flash("sucess", "flash message sent successfully");
 
-  // console.log(req.flash);
   res.json({
     success: success[0] || null,
     error: error[0] || null,
   });
-});
-
-
-
-
-app.get("/getStock", async(req, res) => {
-    let data = [{}];
-    for (const { symbol, companyName } of symbols) {
-      const response = await fetch(
-        `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${process.env.FINNHUB_KEY}`,
-      );
-
-      const stock = await response.json();
-      data.push(stock);
-
-    }
-
-    res.send(data);
 });
 
 
@@ -161,35 +94,30 @@ let updateStockPrices = async () => {
       );
 
       const stock = await response.json();
-      // res.send(stock);
 
-        await Stock.findOneAndUpdate(
-          { symbol },
-          { 
-            name:companyName,
-            symbol,
-            currentPrice: stock.c,
-            previousClose: stock.pc,
-            change: stock.d,
-            high: stock.h,
-            low: stock.l,
-            open: stock.o,
-            changePercent: stock.dp,
-            updatedAt: new Date(),
-          },
-          {
-            upsert: true,
-            returnDocument: "after",
-          },
-        );
-  
+      await Stock.findOneAndUpdate(
+        { symbol },
+        {
+          name: companyName,
+          symbol,
+          currentPrice: stock.c,
+          previousClose: stock.pc,
+          change: stock.d,
+          high: stock.h,
+          low: stock.l,
+          open: stock.o,
+          changePercent: stock.dp,
+          updatedAt: new Date(),
+        },
+        {
+          upsert: true,
+          returnDocument: "after",
+        },
+      );
     }
-    console.log(`updated data at ${new Date().toLocaleTimeString()}`);
-    
-  } catch (err) {
-    // console.log(err.message);
-  }
+  } catch (err) {}
 };
+
 setInterval(updateStockPrices, 15000);
 
 
@@ -202,33 +130,12 @@ app.use("/users", userRouter);
 // Authentication (login, logout, signup)
 app.use("/auth", authRouter);
 
-// adding new Order
-app.post("/newOrder", async (req, res) => {
-  let newOrder = new Order({
-    name: req.body.name,
-    qty: req.body.qty,
-    price: req.body.price,
-    mode: req.body.mode,
-  });
-
-  newOrder
-    .save()
-    .then(() => {
-      console.log("saved");
-    })
-    .catch((err) => {
-      console.log(err.message);
-    });
-  //  res.send("Order saved");
-});
 
 app.listen(PORT, () => {
-  console.log(`app is started on port ${PORT} ....`);
+  console.log("app is started ......");
 });
 
 app.use((err, req, res, next) => {
   let { statusCode = 500, message } = err;
-  //  console.log(err);
-  console.log(err);
   res.status(statusCode).send(message);
 });
