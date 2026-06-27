@@ -187,10 +187,10 @@ let updateStockPrices = async () => {
     console.log(`updated data at ${new Date().toLocaleTimeString()}`);
     
   } catch (err) {
-    console.log(err);
+    // console.log(err.message);
   }
 };
-setInterval(updateStockPrices, 100000);
+setInterval(updateStockPrices, 15000);
 
 
 app.use("/holdings", holdingsRouter);

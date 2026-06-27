@@ -6,9 +6,10 @@ const jwt = require('jsonwebtoken');
 module.exports.userVerification = async (req, res, next) => {
     // console.log("in middleware ....")
     const token = req.cookies.token;
-    // console.log(token);
+
 
     if (!token) {
+        // console.log("no token found");
         return res.status(401).json({ status: false, message: "No token" });
     }
 

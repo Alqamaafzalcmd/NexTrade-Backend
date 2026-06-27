@@ -8,9 +8,9 @@ const positionsSchema = new Schema({
   qty: Number,
   avg: Number,
   price: Number,
-  net: String,
-  day: String,
-  isLoss: Boolean,
+  // net: String,
+  // day: String,
+  // isLoss: Boolean,
   customer: {
     type: Schema.Types.ObjectId,
     ref: "User",

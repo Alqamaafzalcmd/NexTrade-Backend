@@ -2,6 +2,7 @@ const User = require("../models/usersModel");
 const createSecretToken = require("../utils/secretToken");
 const bcrypt = require("bcryptjs");
 
+
 module.exports.signup = async (req, res) => {
   const { email, password, username } = req.body;
 
@@ -52,13 +53,14 @@ module.exports.login = async (req, res) => {
       password,
     } = req.body;
 
+    // console.log(req.cookies)
     if ((!email || !username) && !password) {
       return res
         .status(400)
         .json({ message: "username/email and password are required" });
     }
 
-    console.log(req.body);
+    // console.log(req.body);
 
     const user =
       (await User.findOne({ username })) || (await User.findOne({ email }));
@@ -75,7 +77,7 @@ module.exports.login = async (req, res) => {
     // console.log(user.password);
     console.log(valid);
     if (!valid) {
-      console.log("password validation is failed .......")
+      console.log("password validation is failed .......");
       return res
         .status(401)
         .json({ message: "incorrect username/email or password" });
@@ -97,4 +99,16 @@ module.exports.login = async (req, res) => {
     console.log(err);
     return res.status(500).send({ message: err.message, success: false, user });
   }
+};
+
+module.exports.vaidateUser = async (req, res) => {
+  res.status(201).json({ message: "user is authorized" });
+};
+
+module.exports.logout = async (req, res) => {
+  res.clearCookie("token");
+  res.json({
+    success: true,
+    message: "Logged out successfully",
+  });
 };
