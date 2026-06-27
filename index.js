@@ -29,6 +29,11 @@ const symbols = require("./symbols");
 
 const PORT = process.env.PORT;
 const url = process.env.MONGO_URL;
+const sessionSecret = process.env.SECRET || process.env.TOKEN_KEY;
+
+if (!sessionSecret) {
+  throw new Error("Session secret is required");
+}
 
 // parsing data and security
 app.use(
@@ -47,19 +52,19 @@ app.use(cookieParser());
 const store = MongoStore.create({
   mongoUrl: url,
   crypto: {
-    secret: process.env.SECRET,
+    secret: sessionSecret,
   },
   touchAfter: 24 * 3600, // time period in seconds
   ttl: 60 * 60 * 24 * 7,
 });
 
-store.on("error", () => {
+store.on("error", (err) => {
   console.log("ERROR IN MONGO SESSION STORE", err);
 });
 
 const sessionOptions = {
   store, // session storage
-  secret: process.env.SECRET,
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: true,
   cookie: {
