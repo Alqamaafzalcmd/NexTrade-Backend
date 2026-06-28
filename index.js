@@ -38,7 +38,7 @@ if (!sessionSecret) {
 // parsing data and security
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: [`${process.env.FRONTEND_URL}`, `${process.env.DASHBOARD_URL}`],
     credentials: true,
   }),
 );
@@ -84,7 +84,7 @@ async function main() {
 
 main()
   .then(() => {
-    console.log("database connection successful....");
+    console.log("database connection successfull....");
   })
   .catch((err) => {
     console.log("database connection failed !!!");
