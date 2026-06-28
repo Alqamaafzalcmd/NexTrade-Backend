@@ -2,6 +2,13 @@ const User = require("../models/usersModel");
 const createSecretToken = require("../utils/secretToken");
 const bcrypt = require("bcryptjs");
 
+const tokenCookieOptions = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+};
+
 module.exports.signup = async (req, res) => {
   const { email, password, username } = req.body;
 
@@ -29,11 +36,7 @@ module.exports.signup = async (req, res) => {
 
   const token = createSecretToken(newUser._id);
 
-  res.cookie("token", token, {
-    withCredentials: true,
-    httpOnly: false,
-    expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  });
+  res.cookie("token", token, tokenCookieOptions);
 
   req.flash("success", `Welcome ${newUser.username} to NexTrade`);
   return res
@@ -72,11 +75,7 @@ module.exports.login = async (req, res) => {
     }
 
     const token = await createSecretToken(user.id);
-    res.cookie("token", token, {
-      withCredentials: true,
-      httpOnly: false,
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    });
+    res.cookie("token", token, tokenCookieOptions);
 
     req.flash("success", "user logged in successfully");
     return res
@@ -92,7 +91,11 @@ module.exports.vaidateUser = async (req, res) => {
 };
 
 module.exports.logout = async (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
   res.json({
     success: true,
     message: "Logged out successfully",
