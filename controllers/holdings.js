@@ -46,10 +46,10 @@ module.exports.addHolding = async (req, res) => {
 
   // updating funds and used margin
   let user = await User.findOne({ _id: req.user._id });
-  if (user.funds < price) {
+  if (user.funds < price * qty) {
     return res.status(400).json({ message: "Insufficient funds" });
   }
-  user.funds -= price;
+  user.funds -= price * qty;
   await user.save();
 
   if (stock) {
@@ -88,7 +88,7 @@ module.exports.sellHolding = async (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  if (holding.qty < qty) {
+  if (holding.qty < qty ) {
     return res.status(401).json({ message: "Not enough stock quantity exist" });
   }
 
@@ -104,5 +104,5 @@ module.exports.sellHolding = async (req, res) => {
   user.funds += sellAmount;
   await user.save();
 
-  return res.status(201).json({ message: "Stock sold successfullu" });
+  return res.status(201).json({ message: "Stock sold successfully" });
 };

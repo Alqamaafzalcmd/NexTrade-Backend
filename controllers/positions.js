@@ -49,7 +49,7 @@ module.exports.addPosition = async (req, res) => {
 
   // updating funds and used margin
   let user = await User.findOne({ _id: req.user._id });
-  const totalCost = price;
+  const totalCost = price * qty;
 
   if (user.funds < totalCost) {
     return res.status(400).json({ message: "Insufficient funds" });
